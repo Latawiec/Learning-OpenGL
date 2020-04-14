@@ -1,0 +1,54 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build",
+            "group": "build",
+            "command": "cmake --build ./build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "Setup Cmake Debug",
+            "windows": {
+                "command": "rm build; mkdir build; cd build; cmake .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CC_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug"
+            },
+            "linux": {
+                "command": "rm -rf build; mkdir build; cd build; cmake .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CC_COMPILER=clang -DCMAKE_BUILD_TYPE=Debug"
+            }
+            
+        },
+        {
+            "type": "shell",
+            "label": "Setup Cmake Release",
+            "windows": {
+                "command": "rm build; mkdir build; cd build; cmake .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CC_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
+            },
+            "linux": {
+                "command": "rm -rf build; mkdir build; cd build; cmake .. -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CC_COMPILER=clang -DCMAKE_BUILD_TYPE=Release"
+            }
+            
+        },
+        {
+            "type": "shell",
+            "label": "Gtags",
+            "windows": {
+                "command": "gtags.exe"
+            },
+            "linux": {
+                "command": "gtags"
+            }
+        }
+    ],
+    "version": "2.0.0"
+}
