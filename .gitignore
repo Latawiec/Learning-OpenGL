@@ -1,3 +1,7 @@
+# This is actually my own input to gitignore. Rest is geneated:
+build
+*.ini
+
 # Prerequisites
 *.d
 

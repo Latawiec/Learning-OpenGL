@@ -23,6 +23,7 @@
 #include "Model.hpp"
 #include "Utils.hpp"
 #include "Gizmo.hpp"
+#include "KeyControlSet.hpp"
 
 #ifndef SHADERS_SOURCE_DIR
 #define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
@@ -36,42 +37,44 @@
 #define MODELS_SOURCE_DIR "INCORRECT SOURCE DIR"
 #endif
 
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
+	Camera camera;
+	const float cameraSpeed = 1.5f;
+	float deltaTime = 0.0f;
+	float lastFrame = 0.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-Camera camera;
-bool cursorEnabled = false;
-void processInput(GLFWwindow* window) {
-	const float cameraSpeed = 1.5f;
-	auto updateFront = 0.f;
-	auto updateLeft = 0.f;
-	auto updateUp = 0.f;
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, true);
-	} if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		updateFront += cameraSpeed * deltaTime;
-	} if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		updateFront -= cameraSpeed * deltaTime;
-	} if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		updateLeft -= cameraSpeed * deltaTime;
-	} if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		updateLeft += cameraSpeed * deltaTime;
-	} if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-		updateUp -= cameraSpeed * deltaTime;
-	} if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-		updateUp += cameraSpeed * deltaTime;
-	} if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-		std::cout << std::boolalpha << cursorEnabled << '\n';
-		glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
-		cursorEnabled = !cursorEnabled;
-	}
-	camera.updatePosition(updateFront, updateLeft, updateUp);
-}
+class CameraMotionUpdater {
+	glm::vec3 _update{0.f};
+public:
+	CameraMotionUpdater() = default;
+	CameraMotionUpdater(const CameraMotionUpdater& other) = delete;
+	CameraMotionUpdater* operator=(const CameraMotionUpdater& other) = delete;
 
+	void processInput(Key key, State state) {
+		switch (key) {
+			case GLFW_KEY_W: _update.x += state == State::DOWN ? 1.f : -1.f;
+				break;
+			case GLFW_KEY_S: _update.x -= state == State::DOWN ? 1.f : -1.f;
+				break;
+			case GLFW_KEY_D: _update.y += state == State::DOWN ? 1.f : -1.f;
+				break;
+			case GLFW_KEY_A: _update.y -= state == State::DOWN ? 1.f : -1.f;
+				break;
+			case GLFW_KEY_SPACE: _update.z += state == State::DOWN ? 1.f : -1.f;
+				break;
+			case GLFW_KEY_LEFT_SHIFT: _update.z -= state == State::DOWN ? 1.f : -1.f;
+				break;
+		}
+	}
+
+	void apply(Camera& camera, const float multiplier = 0.5f) const {
+		camera.updatePosition(multiplier * _update.x, multiplier * _update.y, multiplier * _update.z);
+	}
+};
+ 
 float lastMouseX;
 float lastMouseY;
 bool firstMouse = true;
@@ -178,6 +181,23 @@ int main() {
 	}
 	glViewport(0, 0, 800, 600);
 
+	CameraMotionUpdater cameraPosUpdater;
+	KeyControlSet keyboardControlls(window,
+		std::make_pair( GLFW_KEY_ESCAPE, [&window](Key key, State state){ if (state == State::DOWN) glfwSetWindowShouldClose(window, true); }),
+		std::make_pair( GLFW_KEY_W, [&cameraPosUpdater](Key key, State state){ cameraPosUpdater.processInput(key, state); }),
+		std::make_pair( GLFW_KEY_S, [&cameraPosUpdater](Key key, State state){ cameraPosUpdater.processInput(key, state); }),
+		std::make_pair( GLFW_KEY_A, [&cameraPosUpdater](Key key, State state){ cameraPosUpdater.processInput(key, state); }),
+		std::make_pair( GLFW_KEY_D, [&cameraPosUpdater](Key key, State state){ cameraPosUpdater.processInput(key, state); }),
+		std::make_pair( GLFW_KEY_LEFT_SHIFT, [&cameraPosUpdater](Key key, State state){ cameraPosUpdater.processInput(key, state); }),
+		std::make_pair( GLFW_KEY_SPACE, [&cameraPosUpdater](Key key, State state){ cameraPosUpdater.processInput(key, state); }),
+		std::make_pair( GLFW_KEY_Q, [cursorEnabled = false, &window](Key key, State state) mutable { if (state == State::DOWN) {
+		 	glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+		 	cursorEnabled = !cursorEnabled;
+		 }}
+		)
+	);
+	
+
 	const auto vertexShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/" "phong.vert.glsl");
 	const auto fragmentShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/" "phong.frag.glsl");
 
@@ -275,12 +295,13 @@ int main() {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		processInput(window);
 
 		// runtime stuff...
 		float currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;  
+		keyboardControlls.processInput();
+		cameraPosUpdater.apply(camera, deltaTime * cameraSpeed);
 
 		policeColor = glm::mix(blue, red, glm::sin(currentFrame*5.f));
 
