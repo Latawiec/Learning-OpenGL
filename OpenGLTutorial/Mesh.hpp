@@ -83,6 +83,7 @@ class Mesh {
 
     unsigned int VAO, VBO, EBO;
 public:
+    
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) :
         _vertices(std::move(vertices)),
         _indices(std::move(indices)),
