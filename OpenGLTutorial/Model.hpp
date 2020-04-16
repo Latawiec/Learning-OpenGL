@@ -46,33 +46,8 @@ private:
     }
 
     Mesh processMesh(aiMesh *mesh, const aiScene *scene) {
-        std::vector<Vertex> vertices;
+
         std::vector<unsigned int> indices;
-        std::vector<Texture> textures;
-
-        for (int i=0; i<mesh->mNumVertices; ++i) {
-            Vertex vertex;
-
-            const auto& position = mesh->mVertices[i];
-            vertex.position = glm::vec3(
-                position.x, position.y, position.z
-            );
-
-            const auto& normal = mesh->mNormals[i];
-            vertex.normal = glm::vec3(
-                normal.x, normal.y, normal.z
-            );
-
-            if (mesh->mTextureCoords[0]) {
-                const auto& textureCoords = mesh->mTextureCoords[0][i];
-                vertex.texCoord = glm::vec2(textureCoords.x, textureCoords.y);
-            } else {
-                vertex.texCoord = glm::vec2(0.f);
-            }
-            
-            vertices.push_back(vertex);
-        }
-
         for (int i=0; i<mesh->mNumFaces; ++i) {
             const auto& face = mesh->mFaces[i];
             for (int j=0; j<face.mNumIndices; ++j) {
@@ -80,6 +55,24 @@ private:
             }
         }
 
+        VertexDataBase vertexData;
+        const size_t numberOfVertices = mesh->mNumVertices;
+        const float* vertices = reinterpret_cast<float*>(mesh->mVertices);
+        const float* normals = reinterpret_cast<float*>(mesh->mNormals);
+        bool hasUvs = mesh->mTextureCoords[0];
+        if (hasUvs) {
+            auto uvs = mesh->mTextureCoords[0];
+            std::vector<glm::vec2> convertedUVs(numberOfVertices);
+            for (int i=0; i<numberOfVertices; ++i) {
+                convertedUVs[i].x = uvs[i].x;
+                convertedUVs[i].y = uvs[i].y;
+            }
+            vertexData = VertexData<Layout::Sequential, Vec3, Vec3, Vec2>(indices, numberOfVertices, vertices, normals, reinterpret_cast<float*>(convertedUVs.data()));
+        } else {
+            vertexData = VertexData<Layout::Sequential, Vec3, Vec3>(indices, numberOfVertices, vertices, normals);
+        } 
+
+        std::vector<Texture> textures;
         if (mesh->mMaterialIndex >=0) {
             auto material = scene->mMaterials[mesh->mMaterialIndex];
             auto diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, TextureType::Diffuse);
@@ -90,7 +83,7 @@ private:
             textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
         }
 
-        return Mesh(std::move(vertices), std::move(indices), std::move(textures));
+        return Mesh(vertexData, std::move(textures));
     }
 
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, TextureType typeName) {

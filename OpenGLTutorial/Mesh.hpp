@@ -9,18 +9,13 @@
 #include <stb_image.h>
 
 #include "ShaderProgram.hpp"
+#include "VertexData.hpp"
 
 enum class TextureType : uint8_t {
     Diffuse = 0,
     Specular,
     Normal,
     SIZE
-};
-
-struct Vertex {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 texCoord;
 };
 
 struct Texture {
@@ -77,19 +72,14 @@ class Mesh {
         }
     }
 
-    std::vector<Vertex> _vertices;
-    std::vector<unsigned int> _indices;
+    VertexDataBase _vertexData;
     std::vector<Texture> _textures;
-
-    unsigned int VAO, VBO, EBO;
 public:
     
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) :
-        _vertices(std::move(vertices)),
-        _indices(std::move(indices)),
-        _textures(std::move(textures)) {
-            setupMesh();
-        }
+    Mesh(VertexDataBase vertexData, std::vector<Texture> textures)
+    : _vertexData(vertexData),
+      _textures(std::move(textures))
+    {}
 
     void Draw(ShaderProgram& shader) {
         std::array<int, static_cast<size_t>(TextureType::SIZE)> textureCounters{};
@@ -111,35 +101,7 @@ public:
         }
         glActiveTexture(GL_TEXTURE0);
 
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-    }
-
-private:
-    void setupMesh() {
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        glGenBuffers(1, &EBO);
-
-        glBindVertexArray(VAO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-
-        glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(_vertices[0]), _vertices.data(), GL_STATIC_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, _indices.size() * sizeof(_indices[0]), _indices.data(), GL_STATIC_DRAW);
-
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
-
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        VertexDataBase::ScopedBinding bind(_vertexData);
+        glDrawElements(GL_TRIANGLES, _vertexData.elementsCount(), GL_UNSIGNED_INT, 0);
     }
 };

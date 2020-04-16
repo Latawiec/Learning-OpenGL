@@ -80,45 +80,45 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	camera.updateFov(offset);
 }
 
-std::vector<Vertex> vertices = {
-	// pos				   // normal		    // texcoord   
-    {{-0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f}, 	{0.0f, 0.0f} },
-    {{ 0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 0.0f} },
-    {{ 0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 1.0f} },
-    {{ 0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 1.0f} },
-    {{-0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {0.0f, 1.0f} },
-    {{-0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {0.0f, 0.0f} },
-    {{-0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 0.0f} },
-    {{ 0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 0.0f} },
-    {{ 0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 1.0f} },
-    {{ 0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 1.0f} },
-    {{-0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 1.0f} },
-    {{-0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 0.0f} },
-    {{-0.5f,  0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 0.0f} },
-    {{-0.5f,  0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 1.0f} },
-    {{-0.5f, -0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 1.0f} },
-    {{-0.5f, -0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 1.0f} },
-    {{-0.5f, -0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 0.0f} },
-    {{-0.5f,  0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 0.0f} },
-    {{ 0.5f,  0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 0.0f} },
-    {{ 0.5f,  0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 1.0f} },
-    {{ 0.5f, -0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 1.0f} },
-    {{ 0.5f, -0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 1.0f} },
-    {{ 0.5f, -0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 0.0f} },
-    {{ 0.5f,  0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 0.0f} },
-    {{-0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 1.0f} },
-    {{ 0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 1.0f} },
-    {{ 0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 0.0f} },
-    {{ 0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 0.0f} },
-    {{-0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 0.0f} },
-    {{-0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 1.0f} },
-    {{-0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 1.0f} },
-    {{ 0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 1.0f} },
-    {{ 0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 0.0f} },
-    {{ 0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 0.0f} },
-    {{-0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 0.0f} },
-    {{-0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 1.0f} }
-};    
+// std::vector<Vertex> vertices = {
+// 	// pos				   // normal		    // texcoord   
+//     {{-0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f}, 	{0.0f, 0.0f} },
+//     {{ 0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 0.0f} },
+//     {{ 0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 1.0f} },
+//     {{ 0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 1.0f} },
+//     {{-0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {0.0f, 1.0f} },
+//     {{-0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {0.0f, 0.0f} },
+//     {{-0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 0.0f} },
+//     {{ 0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 0.0f} },
+//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 1.0f} },
+//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 1.0f} },
+//     {{-0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 1.0f} },
+//     {{-0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 0.0f} },
+//     {{-0.5f,  0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 0.0f} },
+//     {{-0.5f,  0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 1.0f} },
+//     {{-0.5f, -0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 1.0f} },
+//     {{-0.5f, -0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 1.0f} },
+//     {{-0.5f, -0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 0.0f} },
+//     {{-0.5f,  0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 0.0f} },
+//     {{ 0.5f,  0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 0.0f} },
+//     {{ 0.5f,  0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 1.0f} },
+//     {{ 0.5f, -0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 1.0f} },
+//     {{ 0.5f, -0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 1.0f} },
+//     {{ 0.5f, -0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 0.0f} },
+//     {{ 0.5f,  0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 0.0f} },
+//     {{-0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 1.0f} },
+//     {{ 0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 1.0f} },
+//     {{ 0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 0.0f} },
+//     {{ 0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 0.0f} },
+//     {{-0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 0.0f} },
+//     {{-0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 1.0f} },
+//     {{-0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 1.0f} },
+//     {{ 0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 1.0f} },
+//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 0.0f} },
+//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 0.0f} },
+//     {{-0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 0.0f} },
+//     {{-0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 1.0f} }
+// };    
 
 std::vector<unsigned int> indices(36);
 
@@ -176,22 +176,22 @@ int main() {
 	);
 
 	// Setup light data
-	unsigned int lightVAO;
-	glGenVertexArrays(1, &lightVAO);
+	// unsigned int lightVAO;
+	// glGenVertexArrays(1, &lightVAO);
 
-	unsigned int lightVBO;
-	glGenBuffers(1, &lightVBO);
+	// unsigned int lightVBO;
+	// glGenBuffers(1, &lightVBO);
 
-	glBindVertexArray(lightVAO);
+	// glBindVertexArray(lightVAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
+	// glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
+	// glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	// glEnableVertexAttribArray(0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	// glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// glBindVertexArray(0);
 
 	// Texture
 	std::vector<Texture> textures = { 
@@ -199,17 +199,17 @@ int main() {
 		Texture(TEXTURES_SOURCE_DIR "/" "container2_specular.png", TextureType::Specular)
 	};
 
-	auto cube = Mesh(
-		vertices,
-		indices,
-		textures
-	);
+	// auto cube = Mesh(
+	// 	vertices,
+	// 	indices,
+	// 	textures
+	// );
 
-	auto light = Mesh(
-		vertices,
-		indices,
-		{}
-	);
+	// auto light = Mesh(
+	// 	vertices,
+	// 	indices,
+	// 	{}
+	// );
 
 	auto house = Model(MODELS_SOURCE_DIR "/" "house.fbx");
 
@@ -279,28 +279,28 @@ int main() {
 			lightProgram.set("model", lightWorldTransform);
 			lightProgram.set("view", camera.getViewTransform());
 			lightProgram.set("projection", camera.getProjectionTransform());
-			light.Draw(lightProgram);
+			//light.Draw(lightProgram);
 
 			auto up = glm::mat4(1.0f);
 			up = glm::translate(up, glm::vec3(0.f, 1.f, 0.f));
 			up = glm::scale(up, glm::vec3(0.05f));
 			lightProgram.set("lightColor", glm::vec3(0.f, 1.f, 0.f));
 			lightProgram.set("model", up);
-			light.Draw(lightProgram);
+			//light.Draw(lightProgram);
 
 			auto front = glm::mat4(1.0f);
 			front = glm::translate(front, glm::vec3(0.f, 0.f, 1.f));
 			front = glm::scale(front, glm::vec3(0.05f));
 			lightProgram.set("lightColor", glm::vec3(0.f, 0.f, 1.f));
 			lightProgram.set("model", front);
-			light.Draw(lightProgram);
+			//light.Draw(lightProgram);
 
 			auto lightTransform = glm::mat4(1.0f);
 			lightTransform = glm::translate(lightTransform, glm::vec3(1.f, 0.f, 0.f));
 			lightTransform = glm::scale(lightTransform, glm::vec3(0.05f));
 			lightProgram.set("lightColor", glm::vec3(1.f, 0.f, 0.f));
 			lightProgram.set("model", lightTransform);
-			light.Draw(lightProgram);
+			//light.Draw(lightProgram);
 			
 		}
 
@@ -362,6 +362,10 @@ int main() {
 		// check and call events and swap the buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		if (auto error = glGetError(); error != GL_NO_ERROR) {
+			std::cout << "Error: " << error << '\n';
+		}
 	}
 
 	glfwTerminate();
