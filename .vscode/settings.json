@@ -77,7 +77,8 @@
         "xlocmes": "cpp",
         "xlocmon": "cpp",
         "xloctime": "cpp",
-        "bitset": "cpp"
+        "bitset": "cpp",
+        "compare": "cpp"
     },
     "codegnuglobal.executable": "C:\\Users\\Latawiec\\Desktop\\GNUGlobal\\bin\\global.exe"
 }
