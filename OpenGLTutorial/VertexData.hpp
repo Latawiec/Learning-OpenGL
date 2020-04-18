@@ -17,7 +17,7 @@ template<int Count, typename T>
 struct VertexAttribute {
     using value_type = std::decay_t<T>;
     using elements_count = std::integral_constant<int, Count>;
-    using byteSize = std::integral_constant<int, Count * sizeof(value_type)>;
+    using byte_size = std::integral_constant<int, Count * sizeof(value_type)>;
     constexpr static int glType() {
         if constexpr(std::is_same_v<value_type, float>) return GL_FLOAT;
         return -1;
@@ -45,7 +45,7 @@ public:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
-    constexpr int elementsCount() const {
+    constexpr int vertexCount() const {
         return _elementsCount;
     }
 
@@ -84,28 +84,29 @@ public:
 
 private:
     inline void layoutInterleavingData(const std::byte* data) {
-        const int bufferByteSize = _size * (VertexAttributeDescription::byteSize::value + ...);
-        glBufferData(GL_ARRAY_BUFFER, dataByteSize, attrDataTuple.data(), GL_STATIC_DRAW);
+        const int bufferByteSize = _size * (VertexAttributeDescription::byte_size::value + ...);
+        glBufferData(GL_ARRAY_BUFFER, bufferByteSize, data, GL_STATIC_DRAW);
     }
 
     template<class LastOfDescriptions>
     inline void layoutInterleavingAttributes(const int index = 0, const int offset = 0) {
-        const int stride = (VertexAttributeDescription::byteSize::value + ...);
+        const int stride = (VertexAttributeDescription::byte_size::value + ...);
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, stride, offset);
+        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, stride, (void*)offset);
     }
 
-    template<class HeadOfDescriptions, class ... RestOfDescriptions>
+    template<class HeadOfDescriptions, class NextDescrption, class ... RestOfDescriptions>
     inline void layoutInterleavingAttributes(const int index = 0, const int offset = 0) {
-        const int stride = (VertexAttributeDescription::byteSize::value + ...);
+        const int stride = (VertexAttributeDescription::byte_size::value + ...);
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, stride, offset);
-        layoutSequentialAttributes<RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byteSize::value);
+        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, stride, (void*)offset);
+        layoutInterleavingAttributes<NextDescrption, RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byte_size::value);
     }
 };
 
 template <class ... VertexAttributeDescription>
 class VertexData<Layout::Sequential, VertexAttributeDescription...> : public VertexDataBase {
+    using TupleOfDescriptions = std::tuple<VertexAttributeDescription...>;
 public:    
     constexpr VertexData() = default;
 
@@ -118,7 +119,8 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, _VBO);
 
         allocateBuffer();
-        layoutSequentialData<0, VertexAttributeDescription...>(data...);
+        //layoutSequentialData<VertexAttributeDescription...>(data...);
+        layoutSequentialData(data...);
         layoutSequentialAttributes<VertexAttributeDescription...>();
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
@@ -127,36 +129,47 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
+    template<int Index>
+    void setData(const typename std::tuple_element_t<Index, TupleOfDescriptions>::value_type* data) {
+        glBufferSubData(GL_ARRAY_BUFFER, sum_byte_size_until<Index>() * _size, std::tuple_element_t<Index, TupleOfDescriptions>::byte_size::value * _size, data);
+    }
+
 private:
+
+    template<size_t ... Index>
+    constexpr std::size_t sum_byte_size_of(std::integer_sequence<std::size_t, Index...>) {
+        if constexpr (sizeof...(Index) == 0) return 0;
+        else return (std::tuple_element_t<Index, TupleOfDescriptions>::byte_size::value + ...);
+    }
+
+    template<size_t EndIndex>
+    constexpr std::size_t sum_byte_size_until() {
+        return sum_byte_size_of(std::make_index_sequence<EndIndex>{});
+    }
+
     inline void allocateBuffer() {
-        const int bufferByteSize = _size * (VertexAttributeDescription::byteSize::value + ...);
+        const int bufferByteSize = _size * (VertexAttributeDescription::byte_size::value + ...);
         glBufferData(GL_ARRAY_BUFFER, bufferByteSize, 0, GL_STATIC_DRAW);
     }
 
-    template<int dataOffset = 0>
-    inline void layoutSequentialData() {} // Finisher
-
-    template<int dataOffset = 0, class HeadOfDescriptions, class ... RestOfDescriptions>
-    inline void layoutSequentialData(const typename HeadOfDescriptions::value_type* data, const typename RestOfDescriptions::value_type* ... rest) {
-        glBufferSubData(GL_ARRAY_BUFFER, dataOffset * _size, HeadOfDescriptions::byteSize::value * _size, data);
-        std::cout << HeadOfDescriptions::byteSize::value << '\n';
-        layoutSequentialData<dataOffset + HeadOfDescriptions::byteSize::value, RestOfDescriptions...>(rest...);
+    inline void layoutSequentialData(const typename VertexAttributeDescription::value_type* ... data) {
+        [&]<std::size_t ... I>(std::index_sequence<I...>) { (setData<I>(std::get<I>(std::make_tuple(data...))), ...); }(std::make_index_sequence<sizeof...(VertexAttributeDescription)>{});
     }
 
     template<class LastOfDescriptions>
     inline void layoutSequentialAttributes(const int index = 0, const int offset = 0) {
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, LastOfDescriptions::byteSize::value, (void*)offset);
+        glVertexAttribPointer(index, LastOfDescriptions::elements_count::value, LastOfDescriptions::glType(), GL_FALSE, LastOfDescriptions::byte_size::value, (void*)offset);
         std::cout << LastOfDescriptions::elements_count::value << '\n';
-        std::cout << LastOfDescriptions::byteSize::value << '\n';
+        std::cout << LastOfDescriptions::byte_size::value << '\n';
     }
 
     template<class HeadOfDescriptions, class NextDescription, class ... RestOfDescriptions>
     inline void layoutSequentialAttributes(const int index = 0, const int offset = 0) {
         glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, HeadOfDescriptions::byteSize::value, (void*)offset);
+        glVertexAttribPointer(index, HeadOfDescriptions::elements_count::value, HeadOfDescriptions::glType(), GL_FALSE, HeadOfDescriptions::byte_size::value, (void*)offset);
         std::cout << HeadOfDescriptions::elements_count::value << '\n';
-        std::cout << HeadOfDescriptions::byteSize::value << '\n';
-        layoutSequentialAttributes<NextDescription, RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byteSize::value * _size);
+        std::cout << HeadOfDescriptions::byte_size::value << '\n';
+        layoutSequentialAttributes<NextDescription, RestOfDescriptions...>(index + 1, offset + HeadOfDescriptions::byte_size::value * _size);
     }
 };

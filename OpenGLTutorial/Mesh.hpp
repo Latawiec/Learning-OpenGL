@@ -102,6 +102,6 @@ public:
         glActiveTexture(GL_TEXTURE0);
 
         VertexDataBase::ScopedBinding bind(_vertexData);
-        glDrawElements(GL_TRIANGLES, _vertexData.elementsCount(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, _vertexData.vertexCount(), GL_UNSIGNED_INT, 0);
     }
 };

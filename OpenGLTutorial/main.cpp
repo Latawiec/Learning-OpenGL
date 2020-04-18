@@ -80,46 +80,45 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	camera.updateFov(offset);
 }
 
-// std::vector<Vertex> vertices = {
-// 	// pos				   // normal		    // texcoord   
-//     {{-0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f}, 	{0.0f, 0.0f} },
-//     {{ 0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 0.0f} },
-//     {{ 0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 1.0f} },
-//     {{ 0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {1.0f, 1.0f} },
-//     {{-0.5f,  0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {0.0f, 1.0f} },
-//     {{-0.5f, -0.5f, -0.5f},   {0.0f,  0.0f, -1.0f},     {0.0f, 0.0f} },
-//     {{-0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 0.0f} },
-//     {{ 0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 0.0f} },
-//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 1.0f} },
-//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {1.0f, 1.0f} },
-//     {{-0.5f,  0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 1.0f} },
-//     {{-0.5f, -0.5f,  0.5f},   {0.0f,  0.0f, 1.0f}, 	    {0.0f, 0.0f} },
-//     {{-0.5f,  0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 0.0f} },
-//     {{-0.5f,  0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 1.0f} },
-//     {{-0.5f, -0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 1.0f} },
-//     {{-0.5f, -0.5f, -0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 1.0f} },
-//     {{-0.5f, -0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {0.0f, 0.0f} },
-//     {{-0.5f,  0.5f,  0.5f},   {-1.0f,  0.0f,  0.0f},    {1.0f, 0.0f} },
-//     {{ 0.5f,  0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 0.0f} },
-//     {{ 0.5f,  0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 1.0f} },
-//     {{ 0.5f, -0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 1.0f} },
-//     {{ 0.5f, -0.5f, -0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 1.0f} },
-//     {{ 0.5f, -0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {0.0f, 0.0f} },
-//     {{ 0.5f,  0.5f,  0.5f},   {1.0f,  0.0f,  0.0f},     {1.0f, 0.0f} },
-//     {{-0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 1.0f} },
-//     {{ 0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 1.0f} },
-//     {{ 0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 0.0f} },
-//     {{ 0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {1.0f, 0.0f} },
-//     {{-0.5f, -0.5f,  0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 0.0f} },
-//     {{-0.5f, -0.5f, -0.5f},   {0.0f, -1.0f,  0.0f},     {0.0f, 1.0f} },
-//     {{-0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 1.0f} },
-//     {{ 0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 1.0f} },
-//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 0.0f} },
-//     {{ 0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {1.0f, 0.0f} },
-//     {{-0.5f,  0.5f,  0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 0.0f} },
-//     {{-0.5f,  0.5f, -0.5f},   {0.0f,  1.0f,  0.0f},     {0.0f, 1.0f} }
-// };    
-
+std::vector<float> vertices = {
+	// pos				   // normal		    // texcoord   
+    -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f, 	0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,     1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,     1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,     0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,     0.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,   0.0f,  0.0f, 1.0f, 	    0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,   0.0f,  0.0f, 1.0f, 	    1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,   0.0f,  0.0f, 1.0f, 	    1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,   0.0f,  0.0f, 1.0f, 	    1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,   0.0f,  0.0f, 1.0f, 	    0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,   0.0f,  0.0f, 1.0f, 	    0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,   -1.0f,  0.0f,  0.0f,    1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,     1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,     0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,     0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,     1.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,     1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,     1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,     0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,     0.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,     0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,     1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,     1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,     0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,     0.0f, 1.0f
+};
 std::vector<unsigned int> indices(36);
 
 int main() {
@@ -158,6 +157,8 @@ int main() {
 	KeyControlSet keyboardControlls(window);
 	CameraKeyboardControl cameraPosUpdater(camera, keyboardControlls, 1.5f);
 	WindowKeyboardControl windowKeyboardControl(window, keyboardControlls);
+
+	VertexDataBase cubeVertexData = VertexData<Layout::Interleaving, Vec3, Vec3, Vec2>(indices, 36, reinterpret_cast<std::byte*>(vertices.data()));
 
 	const auto vertexShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/" "phong.vert.glsl");
 	const auto fragmentShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/" "phong.frag.glsl");
@@ -199,17 +200,15 @@ int main() {
 		Texture(TEXTURES_SOURCE_DIR "/" "container2_specular.png", TextureType::Specular)
 	};
 
-	// auto cube = Mesh(
-	// 	vertices,
-	// 	indices,
-	// 	textures
-	// );
+	auto cube = Mesh(
+		cubeVertexData,
+		textures
+	);
 
-	// auto light = Mesh(
-	// 	vertices,
-	// 	indices,
-	// 	{}
-	// );
+	auto light = Mesh(
+		cubeVertexData,
+		{}
+	);
 
 	auto house = Model(MODELS_SOURCE_DIR "/" "house.fbx");
 
@@ -279,28 +278,28 @@ int main() {
 			lightProgram.set("model", lightWorldTransform);
 			lightProgram.set("view", camera.getViewTransform());
 			lightProgram.set("projection", camera.getProjectionTransform());
-			//light.Draw(lightProgram);
+			light.Draw(lightProgram);
 
 			auto up = glm::mat4(1.0f);
 			up = glm::translate(up, glm::vec3(0.f, 1.f, 0.f));
 			up = glm::scale(up, glm::vec3(0.05f));
 			lightProgram.set("lightColor", glm::vec3(0.f, 1.f, 0.f));
 			lightProgram.set("model", up);
-			//light.Draw(lightProgram);
+			light.Draw(lightProgram);
 
 			auto front = glm::mat4(1.0f);
 			front = glm::translate(front, glm::vec3(0.f, 0.f, 1.f));
 			front = glm::scale(front, glm::vec3(0.05f));
 			lightProgram.set("lightColor", glm::vec3(0.f, 0.f, 1.f));
 			lightProgram.set("model", front);
-			//light.Draw(lightProgram);
+			light.Draw(lightProgram);
 
 			auto lightTransform = glm::mat4(1.0f);
 			lightTransform = glm::translate(lightTransform, glm::vec3(1.f, 0.f, 0.f));
 			lightTransform = glm::scale(lightTransform, glm::vec3(0.05f));
 			lightProgram.set("lightColor", glm::vec3(1.f, 0.f, 0.f));
 			lightProgram.set("model", lightTransform);
-			//light.Draw(lightProgram);
+			light.Draw(lightProgram);
 			
 		}
 
@@ -334,6 +333,8 @@ int main() {
 			shaderProgram.set("projection", camera.getProjectionTransform());
 
 			house.Draw(shaderProgram);
+
+			cube.Draw(shaderProgram);
 		}
 
 		// Magic gizmo drawing.
