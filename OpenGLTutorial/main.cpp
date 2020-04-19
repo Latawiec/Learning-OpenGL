@@ -26,7 +26,7 @@
 #include "KeyControlSet.hpp"
 #include "CameraKeyboardControl.hpp"
 #include "WindowKeyboardControl.hpp"
-
+#include "BayerMatrixDither.hpp"
 
 #ifndef SHADERS_SOURCE_DIR
 #define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
@@ -44,9 +44,17 @@ Camera camera;
 const float cameraSpeed = 1.5f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+int windowWidth = 1024, windowHeight = 1024;
+const int pixelHeight = 512;
+int pixelWidth = static_cast<float>(windowWidth)/static_cast<float>(windowHeight) * pixelHeight;
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
+	camera.updateAspectRatio(static_cast<float>(width)/static_cast<float>(height));
+	windowWidth = width;
+	windowHeight = height;
+	pixelWidth = static_cast<float>(pixelHeight) * static_cast<float>(width)/static_cast<float>(height);
 }
 
 float lastMouseX;
@@ -133,7 +141,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	
-	GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "LearnOpenGL", NULL, NULL);
 	if (window == NULL) {
 		std::cout << "Failed to create GLFW window" << std::endl;
 		glfwTerminate();
@@ -152,7 +160,8 @@ int main() {
 		std::cout << "Failed to initialize GLAD" << std::endl;
 		return -1;
 	}
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, windowWidth, windowHeight);
+	camera.updateAspectRatio(static_cast<float>(windowWidth)/static_cast<float>(windowHeight));
 
 	KeyControlSet keyboardControlls(window);
 	CameraKeyboardControl cameraPosUpdater(camera, keyboardControlls, 1.5f);
@@ -176,24 +185,6 @@ int main() {
 		Shader<ShaderType::Fragment>(lightFragmentShaderCode.c_str())
 	);
 
-	// Setup light data
-	// unsigned int lightVAO;
-	// glGenVertexArrays(1, &lightVAO);
-
-	// unsigned int lightVBO;
-	// glGenBuffers(1, &lightVBO);
-
-	// glBindVertexArray(lightVAO);
-
-	// glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-	// glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices.data(), GL_STATIC_DRAW);
-
-	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	// glEnableVertexAttribArray(0);
-
-	// glBindBuffer(GL_ARRAY_BUFFER, 0);
-	// glBindVertexArray(0);
-
 	// Texture
 	std::vector<Texture> textures = { 
 		Texture(TEXTURES_SOURCE_DIR "/" "container2.png", TextureType::Diffuse),
@@ -212,44 +203,41 @@ int main() {
 
 	auto house = Model(MODELS_SOURCE_DIR "/" "house.fbx");
 
-
-    // framebuffer configuration
-    // -------------------------
-    unsigned int framebuffer;
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    // create a color attachment texture
-    unsigned int textureColorbuffer;
-    glGenTextures(1, &textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 100, 100, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
-    //create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-    unsigned int rbo;
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 100, 100); // use a single renderbuffer object for both a depth AND stencil buffer.
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo); // now actually attach it
-    // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!\n";
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	bool set = false;
-	glEnable(GL_DEPTH_TEST);
-
 	Gizmo gizmo;
 	const glm::vec3 blue(0.f, 0.f, 1.f);
 	const glm::vec3 red(1.f, 0.f, 0.f);
 	glm::vec3 policeColor;
 	float gizmoOffset[2] {};
+
+	unsigned int pixelOutputFBO;
+	unsigned int pixelOutputTexture;
+	unsigned int pixelOutputDepthRBO;
+	glGenFramebuffers(1, &pixelOutputFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, pixelOutputFBO);
+	glEnable(GL_DEPTH_TEST);
+
+	glGenTextures(1, &pixelOutputTexture);
+	glBindTexture(GL_TEXTURE_2D, pixelOutputTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, pixelWidth, pixelHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pixelOutputTexture, 0);
+
+	glGenRenderbuffers(1, &pixelOutputDepthRBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, pixelOutputDepthRBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, pixelWidth, pixelHeight);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pixelOutputDepthRBO);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	BayerMatrixDither ditherer;
+	ditherer.setMatrixDensity(pixelWidth, pixelHeight);
+
 	while(!glfwWindowShouldClose(window)) {
-		glClearColor(.2f, .3f, .3f, 1.f);
-		glViewport(0, 0, 800, 600);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// glClearColor(.2f, .3f, .3f, 1.f);
+		// glViewport(0, 0, windowWidth, windowHeight);
+		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// input
 		ImGui_ImplOpenGL3_NewFrame();
@@ -265,6 +253,11 @@ int main() {
 		windowKeyboardControl.update();
 
 		policeColor = glm::mix(blue, red, glm::sin(currentFrame*5.f));
+
+		glBindFramebuffer(GL_FRAMEBUFFER, pixelOutputFBO);
+		glClearColor(1.f, 1.f, 1.f, 1.f);
+		glViewport(0, 0, pixelWidth, pixelHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		auto lightWorldTransform = glm::mat4(1.0f);
 		lightWorldTransform = glm::rotate(lightWorldTransform, currentFrame, glm::vec3(0.f, 1.f, 0.f));
@@ -318,7 +311,7 @@ int main() {
 			shaderProgram.set("spotLight.cutoffEnd", glm::cos(glm::radians(11.f)));
 
 			shaderProgram.set("pointLight.position", glm::vec3(lightWorldTransform * glm::vec4(0.f, 0.f, 0.f, 1.f)));
-			shaderProgram.set("pointLight.ambient",  0.1f * policeColor);
+			shaderProgram.set("pointLight.ambient",  0.01f * policeColor);
 			shaderProgram.set("pointLight.diffuse",  0.5f * policeColor); // darken diffuse light a bit
 			shaderProgram.set("pointLight.specular", policeColor); 
 			shaderProgram.set("pointLight.constant", 1.0f);
@@ -333,23 +326,27 @@ int main() {
 			shaderProgram.set("projection", camera.getProjectionTransform());
 
 			house.Draw(shaderProgram);
+		}
 
+		{
+			auto model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(0.f, 0.5f, -2.f));
+			shaderProgram.set("model", model);
 			cube.Draw(shaderProgram);
 		}
 
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		// glClearColor(0.f, 0.f, 0.f);
+		glViewport(0, 0, windowWidth, windowHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		ditherer.draw(pixelOutputTexture);
+
 		// Magic gizmo drawing.
+		glClear(GL_DEPTH_BUFFER_BIT);
 		glViewport(gizmoOffset[0], gizmoOffset[1], 100, 100);
 		gizmo.setDirection(camera.getFront());
 		gizmo.draw();
-
-		// glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		// glViewport(0, 0, 100, 100);
-		// glClearColor(0.f, 0.f, 0.f, 0.f);
-		// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // we're not using the stencil buffer now
-		// glEnable(GL_DEPTH_TEST);
-		// gizmo.setDirection(camera.getFront());
-		// gizmo.draw();
-		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		// render your GUI
 		ImGui::Begin("Demo window");

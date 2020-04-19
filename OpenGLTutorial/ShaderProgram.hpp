@@ -73,7 +73,7 @@ public:
 		linkProgram();
 	}
 
-	ShaderProgram() {}
+	ShaderProgram() = default;
 
 	ShaderProgram(ShaderProgram&& other) {
 		glDeleteProgram(_id);

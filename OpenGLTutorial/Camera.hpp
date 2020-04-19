@@ -12,6 +12,7 @@ class Camera {
     float _pitch = 0.f;
 
     float _fov = 45.f;
+    float _aspectRatio = 1.f/2.f;
 
 public:
     void updatePosition(const float front, const float left, const float up) {
@@ -43,12 +44,16 @@ public:
             _fov = 45.0f;
     }
 
+    void updateAspectRatio(const float newAspectRatio) {
+        _aspectRatio = newAspectRatio;   
+    }
+
     glm::mat4 getViewTransform() const {
         return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     }
 
     glm::mat4 getProjectionTransform() const {
-        return glm::perspective(glm::radians(_fov), 800.f/600.f, 0.1f, 100.f);
+        return glm::perspective(glm::radians(_fov), _aspectRatio, 0.1f, 100.f);
     }
 
     glm::vec3 getPosition() const {

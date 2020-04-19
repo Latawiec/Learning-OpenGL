@@ -119,7 +119,6 @@ public:
         glBindBuffer(GL_ARRAY_BUFFER, _VBO);
 
         allocateBuffer();
-        //layoutSequentialData<VertexAttributeDescription...>(data...);
         layoutSequentialData(data...);
         layoutSequentialAttributes<VertexAttributeDescription...>();
 

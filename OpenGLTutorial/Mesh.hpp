@@ -99,6 +99,7 @@ public:
             glBindTexture(GL_TEXTURE_2D, _textures[textureIndex].id);
             textureCounters[static_cast<int>(texture.type)]++;
         }
+        glBindTexture(GL_TEXTURE_2D, 0);
         glActiveTexture(GL_TEXTURE0);
 
         VertexDataBase::ScopedBinding bind(_vertexData);
