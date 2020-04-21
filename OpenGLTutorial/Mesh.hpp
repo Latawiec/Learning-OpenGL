@@ -20,6 +20,7 @@ enum class TextureType : uint8_t {
 
 struct Texture {
     unsigned int id;
+    int width, height;
     TextureType type;
 
     Texture(std::string_view filepath, TextureType type) : type(type) {
@@ -32,7 +33,7 @@ struct Texture {
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         
-        int width, height, nrChannels;
+        int nrChannels;
         unsigned char* data = stbi_load(filepath.data(), &width, &height, &nrChannels, 0);
         GLenum format;
         if (nrChannels == 1)

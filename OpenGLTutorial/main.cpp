@@ -27,6 +27,7 @@
 #include "CameraKeyboardControl.hpp"
 #include "WindowKeyboardControl.hpp"
 #include "BayerMatrixDither.hpp"
+#include "Filter.hpp"
 
 #ifndef SHADERS_SOURCE_DIR
 #define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
@@ -234,6 +235,23 @@ int main() {
 	BayerMatrixDither ditherer;
 	ditherer.setMatrixDensity(pixelWidth, pixelHeight);
 
+	std::vector<glm::vec3> xPrewittKernel = {
+		glm::vec3{2.f}, glm::vec3{1.f}, glm::vec3{0.f},
+		glm::vec3{1.f}, glm::vec3{0.f}, glm::vec3{-1.f},
+		glm::vec3{0.f}, glm::vec3{-1.f}, glm::vec3{-2.f}
+	};
+
+	std::vector<glm::vec3> yPrewittKernel = {
+		glm::vec3{1.f}, glm::vec3{1.f}, glm::vec3{1.f},
+		glm::vec3{0.f}, glm::vec3{0.f}, glm::vec3{0.f},
+		glm::vec3{-1.f}, glm::vec3{-1.f}, glm::vec3{-1.f}
+	};
+
+
+	Texture edgeTestText(TEXTURES_SOURCE_DIR "/" "edgeTest.png", TextureType::Diffuse);
+	Filter filter(3, xPrewittKernel);
+	filter.setMatrixDensity(pixelWidth, pixelHeight);
+
 	while(!glfwWindowShouldClose(window)) {
 		// glClearColor(.2f, .3f, .3f, 1.f);
 		// glViewport(0, 0, windowWidth, windowHeight);
@@ -340,7 +358,8 @@ int main() {
 		glViewport(0, 0, windowWidth, windowHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		ditherer.draw(pixelOutputTexture);
+		//ditherer.draw(pixelOutputTexture);
+		filter.draw(edgeTestText);
 
 		// Magic gizmo drawing.
 		glClear(GL_DEPTH_BUFFER_BIT);
