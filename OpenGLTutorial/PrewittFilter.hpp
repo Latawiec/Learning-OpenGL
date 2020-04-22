@@ -96,9 +96,9 @@ public:
     };
 
     constexpr static inline float prewitt_vertical[9] = {
-        1.0f, 0.0f, -1.f,
-        1.0f, 0.0f, -1.f,
-        1.0f, 0.0f, -1.f
+        -1.0f, 0.0f, 1.f,
+        -1.0f, 0.0f, 1.f,
+        -1.0f, 0.0f, 1.f
     };
 
     constexpr static inline float prewitt_horizontal[9] = {

@@ -23,7 +23,10 @@ void main() {
 
             vec2 imageFetchOffset = vec2(float(x), float(y)) * imageStep;
             vec3 color = vec3(texture(imageTexture, normalizedPos + imageFetchOffset));
-            color = vec3(color.x + color.y + color.z / 3.f);
+            float linear_depth = (2.0 * 0.1f) / (100.f + 0.1f - color.r * (100.f - 0.1f));
+            color = vec3(linear_depth);
+
+            // float linear_depth = (2.0 * near) / (far + near - texture2D(depthtex, texcoord).r * (far - near));
 
             float verticalValue = vec3(texture(prewittVerticalTexture, vec2(0.5f) + vec2(float(x), float(y)) * kernelStep)).r;
             float horizontalValue = vec3(texture(prewittHorizontalTexture, vec2(0.5f) + vec2(float(x), float(y)) * kernelStep)).r;
@@ -33,5 +36,9 @@ void main() {
         }
     }
 
-    FragColor = vec4(vec3(round(length(result_x)) + round(length(result_y))), 1.f);
+    // 0.1f, 100.f
+
+    vec3 outputColor = vec3(step(0.015, length(result_x)) + step(0.015, length(result_y)));
+
+    FragColor = vec4(vec3(1.f) - outputColor, length(outputColor));
 }

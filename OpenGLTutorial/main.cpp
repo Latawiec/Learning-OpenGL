@@ -212,6 +212,7 @@ int main() {
 
 	unsigned int pixelOutputFBO;
 	unsigned int pixelOutputTexture;
+	unsigned int pixelOutputDepthTexture;
 	unsigned int pixelOutputDepthRBO;
 	glGenFramebuffers(1, &pixelOutputFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, pixelOutputFBO);
@@ -224,10 +225,12 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pixelOutputTexture, 0);
 
-	glGenRenderbuffers(1, &pixelOutputDepthRBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, pixelOutputDepthRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, pixelWidth, pixelHeight);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pixelOutputDepthRBO);
+	glGenTextures(1, &pixelOutputDepthTexture);
+	glBindTexture(GL_TEXTURE_2D, pixelOutputDepthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, pixelWidth, pixelHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pixelOutputDepthTexture, 0);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -341,13 +344,14 @@ int main() {
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// glClearColor(0.f, 0.f, 0.f);
 		glViewport(0, 0, windowWidth, windowHeight);
+		//glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//ditherer.draw(pixelOutputTexture);
+		//ditherer.draw(pixelOutputDepthTexture);
 		// filter.draw(edgeTestText);
-		filter.draw(pixelOutputTexture);
+		filter.draw(pixelOutputDepthTexture);
 
 		// Magic gizmo drawing.
 		glClear(GL_DEPTH_BUFFER_BIT);
