@@ -18,6 +18,6 @@ void main() {
     vec3 grayscaleColor = vec3(0.21f * imageColor.r + 0.72 * imageColor.g + 0.07f * imageColor.b);
     vec3 matrixValue = texture(bayerMatrixTexture, scaledMatrixPos).xyz;
     
-    FragColor = vec4(round(grayscaleColor + 1.f*(matrixValue - 0.5f)), 1.f);
+    FragColor = vec4(round(grayscaleColor + .9f*(matrixValue - 0.45f)), 1.f);
     //FragColor = vec4(imageColor, 1.f);
 }
