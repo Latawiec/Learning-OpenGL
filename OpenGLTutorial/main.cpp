@@ -28,6 +28,7 @@
 #include "WindowKeyboardControl.hpp"
 #include "BayerMatrixDither.hpp"
 #include "PrewittFilter.hpp"
+#include "Skybox.hpp"
 
 #ifndef SHADERS_SOURCE_DIR
 #define SHADERS_SOURCE_DIR "INCORRECT SOURCE DIR"
@@ -242,6 +243,16 @@ int main() {
 	PrewittFilter filter{};
 	filter.setMatrixDensity(pixelWidth, pixelHeight);
 
+	std::vector<std::string> skyboxTexturesList = {
+		TEXTURES_SOURCE_DIR "/skybox/right.jpg",
+		TEXTURES_SOURCE_DIR "/skybox/left.jpg",
+		TEXTURES_SOURCE_DIR "/skybox/top.jpg",
+		TEXTURES_SOURCE_DIR "/skybox/bottom.jpg",
+		TEXTURES_SOURCE_DIR "/skybox/front.jpg",
+		TEXTURES_SOURCE_DIR "/skybox/back.jpg"
+	};
+	Skybox skybox(skyboxTexturesList);
+
 	while(!glfwWindowShouldClose(window)) {
 		// glClearColor(.2f, .3f, .3f, 1.f);
 		// glViewport(0, 0, windowWidth, windowHeight);
@@ -266,6 +277,9 @@ int main() {
 		glClearColor(1.f, 1.f, 1.f, 1.f);
 		glViewport(0, 0, pixelWidth, pixelHeight);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		skybox.updateTransform(camera.getViewTransform(), camera.getProjectionTransform());
+		skybox.draw();
 
 		auto lightWorldTransform = glm::mat4(1.0f);
 		lightWorldTransform = glm::rotate(lightWorldTransform, currentFrame, glm::vec3(0.f, 1.f, 0.f));
@@ -348,10 +362,10 @@ int main() {
 		//glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//ditherer.draw(pixelOutputTexture);
+		ditherer.draw(pixelOutputTexture);
 		//ditherer.draw(pixelOutputDepthTexture);
 		// filter.draw(edgeTestText);
-		filter.draw(pixelOutputDepthTexture);
+		// filter.draw(pixelOutputDepthTexture);
 
 		// Magic gizmo drawing.
 		glClear(GL_DEPTH_BUFFER_BIT);

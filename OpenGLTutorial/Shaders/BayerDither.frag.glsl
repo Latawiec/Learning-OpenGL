@@ -13,9 +13,11 @@ void main() {
     vec2 scaledMatrixPos = vec2(matrixHorizontalScale, matrixVerticalScale) * normalizedPos;
     
     vec3 imageColor = texture(imageTexture, normalizedPos).xyz; 
-    vec3 grayscaleColor = vec3(imageColor.x + imageColor.y + imageColor.z / 3.f);
+    //vec3 grayscaleColor = vec3(imageColor.x + imageColor.y + imageColor.z / 3.f);
+    //vec3 grayscaleColor = vec3(min(imageColor.x, min(imageColor.y, imageColor.z)));
+    vec3 grayscaleColor = vec3(0.21f * imageColor.r + 0.72 * imageColor.g + 0.07f * imageColor.b);
     vec3 matrixValue = texture(bayerMatrixTexture, scaledMatrixPos).xyz;
     
-    FragColor = vec4(round(grayscaleColor + matrixValue - 0.5f), 1.f);
-    // FragColor = vec4(imageColor, 1.f);
+    FragColor = vec4(round(grayscaleColor + 1.f*(matrixValue - 0.5f)), 1.f);
+    //FragColor = vec4(imageColor, 1.f);
 }
