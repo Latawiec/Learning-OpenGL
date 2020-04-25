@@ -28,6 +28,8 @@
 #include "WindowKeyboardControl.hpp"
 #include "BayerMatrixDither.hpp"
 #include "PrewittFilter.hpp"
+#include "PrewittFilterNormals.hpp"
+#include "DeferredFramebuffer.hpp"
 #include "Skybox.hpp"
 
 #ifndef SHADERS_SOURCE_DIR
@@ -211,36 +213,11 @@ int main() {
 	glm::vec3 policeColor;
 	float gizmoOffset[2] {};
 
-	unsigned int pixelOutputFBO;
-	unsigned int pixelOutputTexture;
-	unsigned int pixelOutputDepthTexture;
-	unsigned int pixelOutputDepthRBO;
-	glGenFramebuffers(1, &pixelOutputFBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, pixelOutputFBO);
-	glEnable(GL_DEPTH_TEST);
-
-	glGenTextures(1, &pixelOutputTexture);
-	glBindTexture(GL_TEXTURE_2D, pixelOutputTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, pixelWidth, pixelHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pixelOutputTexture, 0);
-
-	glGenTextures(1, &pixelOutputDepthTexture);
-	glBindTexture(GL_TEXTURE_2D, pixelOutputDepthTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, pixelWidth, pixelHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, pixelOutputDepthTexture, 0);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
 	BayerMatrixDither ditherer;
 	ditherer.setMatrixDensity(pixelWidth, pixelHeight);
 
 	Texture edgeTestText(TEXTURES_SOURCE_DIR "/" "edgeTest.png", TextureType::Diffuse);
-	PrewittFilter filter{};
+	PrewittFilterNormals filter{};
 	filter.setMatrixDensity(pixelWidth, pixelHeight);
 
 	std::vector<std::string> skyboxTexturesList = {
@@ -253,6 +230,9 @@ int main() {
 	};
 	Skybox skybox(skyboxTexturesList);
 
+	DeferredFramebuffer pixelatedFramebuffer(pixelWidth, pixelHeight);
+
+	glEnable(GL_DEPTH_TEST);
 	while(!glfwWindowShouldClose(window)) {
 		// glClearColor(.2f, .3f, .3f, 1.f);
 		// glViewport(0, 0, windowWidth, windowHeight);
@@ -273,99 +253,100 @@ int main() {
 
 		policeColor = glm::mix(blue, red, glm::sin(currentFrame*5.f));
 
-		glBindFramebuffer(GL_FRAMEBUFFER, pixelOutputFBO);
-		glClearColor(1.f, 1.f, 1.f, 1.f);
-		glViewport(0, 0, pixelWidth, pixelHeight);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		{	
+			// Render to pixelated framebuffer!
+			FramebufferBase::ScopedBinding framebufferBinding(pixelatedFramebuffer);
+			glClearColor(0.f, 0.f, 0.f, 1.f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		skybox.updateTransform(camera.getViewTransform(), camera.getProjectionTransform());
-		skybox.draw();
+			auto lightWorldTransform = glm::mat4(1.0f);
+			lightWorldTransform = glm::rotate(lightWorldTransform, currentFrame, glm::vec3(0.f, 1.f, 0.f));
+			lightWorldTransform = glm::translate(lightWorldTransform, glm::vec3(5.f, 0.f, 0.f));
+			lightWorldTransform = glm::scale(lightWorldTransform, glm::vec3(0.05f));
+			// rendering commands ...
+			{
+				lightProgram.use();
+				lightProgram.set("lightColor", policeColor);
 
-		auto lightWorldTransform = glm::mat4(1.0f);
-		lightWorldTransform = glm::rotate(lightWorldTransform, currentFrame, glm::vec3(0.f, 1.f, 0.f));
-		lightWorldTransform = glm::translate(lightWorldTransform, glm::vec3(5.f, 0.f, 0.f));
-		lightWorldTransform = glm::scale(lightWorldTransform, glm::vec3(0.05f));
-		// rendering commands ...
-		{
-			lightProgram.use();
-			lightProgram.set("lightColor", policeColor);
+				lightProgram.set("model", lightWorldTransform);
+				lightProgram.set("view", camera.getViewTransform());
+				lightProgram.set("projection", camera.getProjectionTransform());
+				light.Draw(lightProgram);
 
-			lightProgram.set("model", lightWorldTransform);
-			lightProgram.set("view", camera.getViewTransform());
-			lightProgram.set("projection", camera.getProjectionTransform());
-			light.Draw(lightProgram);
+				auto up = glm::mat4(1.0f);
+				up = glm::translate(up, glm::vec3(0.f, 1.f, 0.f));
+				up = glm::scale(up, glm::vec3(0.05f));
+				lightProgram.set("lightColor", glm::vec3(0.f, 1.f, 0.f));
+				lightProgram.set("model", up);
+				light.Draw(lightProgram);
 
-			auto up = glm::mat4(1.0f);
-			up = glm::translate(up, glm::vec3(0.f, 1.f, 0.f));
-			up = glm::scale(up, glm::vec3(0.05f));
-			lightProgram.set("lightColor", glm::vec3(0.f, 1.f, 0.f));
-			lightProgram.set("model", up);
-			light.Draw(lightProgram);
+				auto front = glm::mat4(1.0f);
+				front = glm::translate(front, glm::vec3(0.f, 0.f, 1.f));
+				front = glm::scale(front, glm::vec3(0.05f));
+				lightProgram.set("lightColor", glm::vec3(0.f, 0.f, 1.f));
+				lightProgram.set("model", front);
+				light.Draw(lightProgram);
 
-			auto front = glm::mat4(1.0f);
-			front = glm::translate(front, glm::vec3(0.f, 0.f, 1.f));
-			front = glm::scale(front, glm::vec3(0.05f));
-			lightProgram.set("lightColor", glm::vec3(0.f, 0.f, 1.f));
-			lightProgram.set("model", front);
-			light.Draw(lightProgram);
+				auto lightTransform = glm::mat4(1.0f);
+				lightTransform = glm::translate(lightTransform, glm::vec3(1.f, 0.f, 0.f));
+				lightTransform = glm::scale(lightTransform, glm::vec3(0.05f));
+				lightProgram.set("lightColor", glm::vec3(1.f, 0.f, 0.f));
+				lightProgram.set("model", lightTransform);
+				light.Draw(lightProgram);
+				
+			}
 
-			auto lightTransform = glm::mat4(1.0f);
-			lightTransform = glm::translate(lightTransform, glm::vec3(1.f, 0.f, 0.f));
-			lightTransform = glm::scale(lightTransform, glm::vec3(0.05f));
-			lightProgram.set("lightColor", glm::vec3(1.f, 0.f, 0.f));
-			lightProgram.set("model", lightTransform);
-			light.Draw(lightProgram);
-			
+			{
+				shaderProgram.use();
+				shaderProgram.set("material.shininess", 32.0f);
+				shaderProgram.set("spotLight.ambient",  glm::vec3(0.2f, 0.2f, 0.2f));
+				shaderProgram.set("spotLight.diffuse",  glm::vec3(0.5f, 0.5f, 0.5f)); // darken diffuse light a bit
+				shaderProgram.set("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f)); 
+				shaderProgram.set("spotLight.constant", 1.0f);
+				shaderProgram.set("spotLight.linear", 0.09f);
+				shaderProgram.set("spotLight.quadratic", 0.032f);
+				shaderProgram.set("spotLight.position", camera.getPosition());
+				shaderProgram.set("spotLight.direction", camera.getFront());
+				shaderProgram.set("spotLight.cutoffStart", glm::cos(glm::radians(10.f)));
+				shaderProgram.set("spotLight.cutoffEnd", glm::cos(glm::radians(11.f)));
+
+				shaderProgram.set("pointLight.position", glm::vec3(lightWorldTransform * glm::vec4(0.f, 0.f, 0.f, 1.f)));
+				shaderProgram.set("pointLight.ambient",  0.01f * policeColor);
+				shaderProgram.set("pointLight.diffuse",  0.5f * policeColor); // darken diffuse light a bit
+				shaderProgram.set("pointLight.specular", policeColor); 
+				shaderProgram.set("pointLight.constant", 1.0f);
+				shaderProgram.set("pointLight.linear", 0.09f);
+				shaderProgram.set("pointLight.quadratic", 0.032f);
+
+				shaderProgram.set("viewPos", camera.getPosition());
+				auto model = glm::mat4(1.0f);
+				// model = glm::scale(model, glm::vec3(0.01f));
+				shaderProgram.set("model", model);
+				shaderProgram.set("view", camera.getViewTransform());
+				shaderProgram.set("projection", camera.getProjectionTransform());
+
+				house.Draw(shaderProgram);
+			}
+
+			{
+				auto model = glm::mat4(1.0f);
+				model = glm::translate(model, glm::vec3(0.f, 0.5f, -2.f));
+				shaderProgram.set("model", model);
+				cube.Draw(shaderProgram);
+			}
+
+			skybox.updateTransform(camera.getViewTransform(), camera.getProjectionTransform());
+			skybox.draw();
 		}
-
-		{
-			shaderProgram.use();
-			shaderProgram.set("material.shininess", 32.0f);
-			shaderProgram.set("spotLight.ambient",  glm::vec3(0.2f, 0.2f, 0.2f));
-			shaderProgram.set("spotLight.diffuse",  glm::vec3(0.5f, 0.5f, 0.5f)); // darken diffuse light a bit
-			shaderProgram.set("spotLight.specular", glm::vec3(1.0f, 1.0f, 1.0f)); 
-			shaderProgram.set("spotLight.constant", 1.0f);
-			shaderProgram.set("spotLight.linear", 0.09f);
-			shaderProgram.set("spotLight.quadratic", 0.032f);
-			shaderProgram.set("spotLight.position", camera.getPosition());
-			shaderProgram.set("spotLight.direction", camera.getFront());
-			shaderProgram.set("spotLight.cutoffStart", glm::cos(glm::radians(10.f)));
-			shaderProgram.set("spotLight.cutoffEnd", glm::cos(glm::radians(11.f)));
-
-			shaderProgram.set("pointLight.position", glm::vec3(lightWorldTransform * glm::vec4(0.f, 0.f, 0.f, 1.f)));
-			shaderProgram.set("pointLight.ambient",  0.01f * policeColor);
-			shaderProgram.set("pointLight.diffuse",  0.5f * policeColor); // darken diffuse light a bit
-			shaderProgram.set("pointLight.specular", policeColor); 
-			shaderProgram.set("pointLight.constant", 1.0f);
-			shaderProgram.set("pointLight.linear", 0.09f);
-			shaderProgram.set("pointLight.quadratic", 0.032f);
-
-			shaderProgram.set("viewPos", camera.getPosition());
-			auto model = glm::mat4(1.0f);
-			// model = glm::scale(model, glm::vec3(0.01f));
-			shaderProgram.set("model", model);
-			shaderProgram.set("view", camera.getViewTransform());
-			shaderProgram.set("projection", camera.getProjectionTransform());
-
-			house.Draw(shaderProgram);
-		}
-
-		{
-			auto model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.f, 0.5f, -2.f));
-			shaderProgram.set("model", model);
-			cube.Draw(shaderProgram);
-		}
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, windowWidth, windowHeight);
 		//glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		ditherer.draw(pixelOutputTexture);
+		// ditherer.draw(pixelatedFramebuffer.getNormalsTexture());
 		//ditherer.draw(pixelOutputDepthTexture);
 		// filter.draw(edgeTestText);
-		// filter.draw(pixelOutputDepthTexture);
+		filter.draw(pixelatedFramebuffer.getNormalsTexture());
 
 		// Magic gizmo drawing.
 		glClear(GL_DEPTH_BUFFER_BIT);

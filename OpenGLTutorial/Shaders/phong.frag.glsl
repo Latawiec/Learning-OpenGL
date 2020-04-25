@@ -176,11 +176,16 @@ uniform vec3 viewPos;
 uniform Material material;
 uniform SpotLight spotLight;
 uniform PointLight pointLight;
-out vec4 FragColor;
+
+layout (location = 0) out vec3 gPosition;
+layout (location = 1) out vec4 gAlbedo;
+layout (location = 2) out vec3 gNormal;
 
 void main()
 {
     vec3 result = CalcLight(spotLight, material.diffuseTextures[0], material.specularTextures[0], material.shininess, TexCoords, Normal, FragPos, viewPos)
      + CalcLight(pointLight, material.diffuseTextures[0], material.specularTextures[0], material.shininess, TexCoords, Normal, FragPos, viewPos);
-    FragColor = vec4(result, 1.0);
+    gAlbedo = vec4(result, 1.0);
+    gPosition = FragPos;
+    gNormal = normalize(Normal);
 }

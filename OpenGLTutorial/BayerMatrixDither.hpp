@@ -20,8 +20,8 @@ public:
         auto indicesVector = std::vector<unsigned int>(indices, indices + 6);
         _vertexData = VertexData<Layout::Sequential, Vec3>(indicesVector, 4, reinterpret_cast<const float*>(quadCoords));
 
-        const auto vertexShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/" "BayerDither.vert.glsl");
-	    const auto fragmentShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/" "BayerDither.frag.glsl");
+        const auto vertexShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/BayerDither/" "BayerDither.vert.glsl");
+	    const auto fragmentShaderCode = Utils::readFile(SHADERS_SOURCE_DIR "/BayerDither/" "BayerDither.frag.glsl");
 
         _shaderProgram = ShaderProgram(
             Shader<ShaderType::Vertex>(vertexShaderCode.c_str()),

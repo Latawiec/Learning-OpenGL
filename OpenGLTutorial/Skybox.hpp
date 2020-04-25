@@ -81,7 +81,7 @@ public:
     }
 
     void draw() {
-        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
         _program.use();
         _program.set(viewName, _view);
         _program.set(projectionName, _projection);
@@ -90,7 +90,7 @@ public:
         glBindTexture(GL_TEXTURE_CUBE_MAP, _texture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
-        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
     }
 
 private:
